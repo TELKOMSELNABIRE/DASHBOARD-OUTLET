@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Monitoring Outlet</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f6f8;
+}
+header {
+  background: #1f2937;
+  color: #fff;
+  padding: 14px 20px;
+  font-size: 18px;
+  font-weight: bold;
+}
+.menu {
+  display: flex;
+  gap: 10px;
+  padding: 12px 20px;
+  background: #fff;
+}
+.menu button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  background: #e5e7eb;
+  cursor: pointer;
+  font-weight: bold;
+}
+.menu button.active {
+  background: #2563eb;
+  color: #fff;
+}
+.controls {
+  display: flex;
+  gap: 10px;
+  padding: 12px 20px;
+}
+.controls input, .controls select {
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+}
+th, td {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  text-align: left;
+}
+th {
+  background: #f9fafb;
+}
+.rank {
+  font-weight: bold;
+  color: #16a34a;
+}
+@media(max-width:768px){
+  table { font-size: 12px; }
+}
+</style>
+</head>
+
+<body>
+
+<header>Dashboard Monitoring Outlet</header>
+
+<div class="menu">
+  <button onclick="loadSheet('TRASSER')" class="active" id="btn-TRASSER">TRASSER</button>
+  <button onclick="loadSheet('TRAGIS')" id="btn-TRAGIS">TRAGIS</button>
+  <button onclick="loadSheet('TRAVO')" id="btn-TRAVO">TRAVO</button>
+</div>
+
+<div class="controls">
+  <input type="text" id="search" placeholder="Search Outlet ID / Nama">
+  <select id="sort">
+    <option value="rank-asc">Rank ↑</option>
+    <option value="rank-desc">Rank ↓</option>
+    <option value="score-asc">Score ↑</option>
+    <option value="score-desc">Score ↓</option>
+  </select>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Rank</th>
+      <th>Outlet ID</th>
+      <th>Nama Outlet</th>
+      <th>Rev Jan'25</th>
+      <th>Rev Jan'26</th>
+      <th>YoY</th>
+      <th>Score</th>
+    </tr>
+  </thead>
+  <tbody id="tbody"></tbody>
+</table>
+
+<script>
+const SHEET_ID = "175sV8aSZaZK3QUAvy4vVfE6J7DTiO8SNfeVd_qYXbqw";
+let currentData = [];
+let currentSheet = "TRASSER";
+
+function sheetURL(name){
+  return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${name}`;
+}
+
+function loadSheet(name){
+  currentSheet = name;
+  document.querySelectorAll(".menu button").forEach(b => b.classList.remove("active"));
+  document.getElementById("btn-"+name).classList.add("active");
+
+  fetch(sheetURL(name))
+    .then(res => res.text())
+    .then(csv => {
+      const rows = csv.split("\n").slice(1);
+      currentData = rows.map(r => {
+        const c = r.split(",");
+        return {
+          outletId: c[0],
+          name: c[1],
+          rev25: c[2],
+          rev26: c[3],
+          yoy: c[4],
+          score: Number(c[5]),
+          rank: Number(c[6])
+        };
+      });
+      render();
+    });
+}
+
+function render(){
+  let data = [...currentData];
+  const q = document.getElementById("search").value.toLowerCase();
+  const sort = document.getElementById("sort").value;
+
+  if(q){
+    data = data.filter(d =>
+      d.outletId.toLowerCase().includes(q) ||
+      d.name.toLowerCase().includes(q)
+    );
+  }
+
+  if(sort === "rank-asc") data.sort((a,b)=>a.rank-b.rank);
+  if(sort === "rank-desc") data.sort((a,b)=>b.rank-a.rank);
+  if(sort === "score-asc") data.sort((a,b)=>a.score-b.score);
+  if(sort === "score-desc") data.sort((a,b)=>b.score-a.score);
+
+  const tbody = document.getElementById("tbody");
+  tbody.innerHTML = "";
+  data.forEach(d=>{
+    tbody.innerHTML += `
+      <tr>
+        <td class="rank">${d.rank}</td>
+        <td>${d.outletId}</td>
+        <td>${d.name}</td>
+        <td>${d.rev25}</td>
+        <td>${d.rev26}</td>
+        <td>${d.yoy}</td>
+        <td>${d.score.toLocaleString()}</td>
+      </tr>
+    `;
+  });
+}
+
+document.getElementById("search").addEventListener("input", render);
+document.getElementById("sort").addEventListener("change", render);
+
+loadSheet("TRASSER");
+</script>
+
+</body>
+</html>
