@@ -5,16 +5,65 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dashboard Outlet</title>
 
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
 <style>
-body{font-family:Poppins,Arial;background:#f4f6f8;margin:0}
-header{background:#b51217;color:#fff;padding:16px;text-align:center}
-nav{display:flex;justify-content:center;gap:10px;margin:20px}
-nav button{padding:10px 18px;border:none;border-radius:8px;font-weight:600;cursor:pointer}
-nav button.active{background:#b51217;color:#fff}
-.container{max-width:1200px;margin:auto;padding:20px}
-table{width:100%;border-collapse:collapse;background:#fff}
-th,td{padding:10px;border-bottom:1px solid #eee}
-th{background:#f0f0f0}
+body{
+font-family:Poppins,sans-serif;
+background:#f4f6f8;
+margin:0;
+}
+header{
+background:#b51217;
+color:#fff;
+padding:16px;
+text-align:center;
+}
+nav{
+display:flex;
+justify-content:center;
+gap:10px;
+margin:20px;
+}
+nav button{
+padding:10px 18px;
+border:none;
+border-radius:8px;
+font-weight:600;
+cursor:pointer;
+}
+nav button.active{
+background:#b51217;
+color:#fff;
+}
+.container{
+max-width:1200px;
+margin:auto;
+padding:20px;
+}
+.search-sort{
+display:flex;
+gap:10px;
+margin-bottom:14px;
+}
+input,select{
+padding:10px;
+border-radius:8px;
+border:1px solid #ccc;
+font-family:Poppins;
+}
+table{
+width:100%;
+border-collapse:collapse;
+background:#fff;
+}
+th,td{
+padding:12px;
+border-bottom:1px solid #eee;
+}
+th{
+background:#f0f0f0;
+}
 </style>
 </head>
 
@@ -29,6 +78,16 @@ th{background:#f0f0f0}
 </nav>
 
 <div class="container">
+
+<div class="search-sort">
+<input id="search" placeholder="Search outlet...">
+<select id="sort">
+<option value="">Sort</option>
+<option value="rank">Rank</option>
+<option value="score">Score</option>
+</select>
+</div>
+
 <table>
 <thead>
 <tr>
@@ -42,47 +101,80 @@ th{background:#f0f0f0}
 <th>Rank</th>
 </tr>
 </thead>
-<tbody id="data">
-<tr><td colspan="8">Loading...</td></tr>
-</tbody>
+<tbody id="data"></tbody>
 </table>
+
 </div>
 
 <script>
-const BASE =
+const BASE_URL =
 "https://docs.google.com/spreadsheets/d/e/2PACX-1vSU1jMmoHiOKZ4imo91F5h9XdcykRG3CbqEQNthOXeVIOh1vsb51khLRXUdJBBfIKKgD3SKb-o2IDHQ/gviz/tq?tqx=out:json&sheet=";
+
+let rawData=[];
 
 function loadSheet(sheet,btn){
 document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
 btn.classList.add("active");
 
-fetch(BASE+sheet)
+fetch(BASE_URL+sheet)
 .then(r=>r.text())
 .then(t=>{
-const json=JSON.parse(t.substring(47,t.length-2));
-const rows=json.table.rows;
-const tbody=document.getElementById("data");
-tbody.innerHTML="";
+if(!t.includes("setResponse")){
+document.getElementById("data").innerHTML=
+"<tr><td colspan='8'>Sheet tidak ditemukan</td></tr>";
+return;
+}
 
-rows.forEach(r=>{
-tbody.innerHTML+=`
-<tr>
-<td>${r.c[0]?.v||""}</td>
-<td>${r.c[2]?.v||""}</td>
-<td>${r.c[4]?.f||r.c[4]?.v||""}</td>
-<td>${r.c[6]?.f||r.c[6]?.v||""}</td>
-<td>${r.c[7]?.f||r.c[7]?.v||""}</td>
-<td>${r.c[9]?.v||""}</td>
-<td>${r.c[10]?.v||""}</td>
-<td>${r.c[11]?.v||""}</td>
-</tr>`;
-});
+const json=JSON.parse(t.substring(47,t.length-2));
+rawData=json.table.rows.map(r=>({
+id:r.c[0]?.v||"",
+nama:r.c[2]?.v||"",
+rev25:r.c[4]?.f||"",
+rev26:r.c[6]?.f||"",
+yoy:r.c[7]?.f||"",
+eligible:r.c[9]?.v||"",
+score:Number(r.c[10]?.v)||0,
+rank:Number(r.c[11]?.v)||0
+}));
+
+render(rawData);
 })
 .catch(()=>{
 document.getElementById("data").innerHTML=
 "<tr><td colspan='8'>Gagal memuat data</td></tr>";
 });
 }
+
+function render(data){
+const tb=document.getElementById("data");
+tb.innerHTML="";
+data.forEach(d=>{
+tb.innerHTML+=`
+<tr>
+<td>${d.id}</td>
+<td>${d.nama}</td>
+<td>${d.rev25}</td>
+<td>${d.rev26}</td>
+<td>${d.yoy}</td>
+<td>${d.eligible}</td>
+<td>${d.score}</td>
+<td>${d.rank}</td>
+</tr>`;
+});
+}
+
+document.getElementById("search").addEventListener("input",e=>{
+render(rawData.filter(d=>
+d.nama.toLowerCase().includes(e.target.value.toLowerCase())
+));
+});
+
+document.getElementById("sort").addEventListener("change",e=>{
+if(e.target.value==="rank")
+render([...rawData].sort((a,b)=>a.rank-b.rank));
+if(e.target.value==="score")
+render([...rawData].sort((a,b)=>b.score-a.score));
+});
 
 loadSheet("TRASSER",document.querySelector("nav button"));
 </script>
