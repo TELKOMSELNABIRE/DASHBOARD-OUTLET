@@ -16,7 +16,7 @@ body {
 
 header {
   background: #b51217;
-  color: #fff;
+  color: white;
   padding: 16px;
   text-align: center;
 }
@@ -26,7 +26,6 @@ nav {
   justify-content: center;
   gap: 10px;
   margin: 20px;
-  flex-wrap: wrap;
 }
 
 nav button {
@@ -40,7 +39,7 @@ nav button {
 
 nav button.active {
   background: #b51217;
-  color: #fff;
+  color: white;
 }
 
 .container {
@@ -53,7 +52,6 @@ nav button.active {
   display: flex;
   gap: 10px;
   margin-bottom: 14px;
-  flex-wrap: wrap;
 }
 
 .search-sort input,
@@ -61,28 +59,22 @@ nav button.active {
   padding: 10px;
   border-radius: 8px;
   border: 1px solid #ccc;
-  font-family: 'Poppins';
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
-  background: #fff;
+  background: white;
 }
 
 th, td {
   padding: 12px;
   border-bottom: 1px solid #eee;
   text-align: left;
-  font-size: 14px;
 }
 
 th {
   background: #f0f0f0;
-}
-
-tr:hover {
-  background: #fafafa;
 }
 </style>
 </head>
@@ -105,8 +97,8 @@ tr:hover {
   <input type="text" id="search" placeholder="Search Outlet...">
   <select id="sort">
     <option value="">Sort</option>
-    <option value="rank">Sort by Rank</option>
-    <option value="score">Sort by Score</option>
+    <option value="rank">Rank</option>
+    <option value="score">Score</option>
   </select>
 </div>
 
@@ -129,13 +121,14 @@ tr:hover {
 </div>
 
 <script>
-const BASE_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSU1jMmoHiOKZ4imo91F5h9XdcykRG3CbqEQNthOXeVIOh1vsb51khLRXUdJBBfIKKgD3SKb-o2IDHQ/gviz/tq?sheet=";
+const BASE_URL =
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vSU1jMmoHiOKZ4imo91F5h9XdcykRG3CbqEQNthOXeVIOh1vsb51khLRXUdJBBfIKKgD3SKb-o2IDHQ/gviz/tq?&tqx=out:json&sheet=";
 
 let rawData = [];
 
-function toNumber(val) {
+function num(val) {
   if (!val) return 0;
-  return Number(val.toString().replace(/[^0-9.-]+/g, ""));
+  return Number(val.toString().replace(/[^0-9]/g, ""));
 }
 
 function loadSheet(sheet, btn) {
@@ -145,21 +138,24 @@ function loadSheet(sheet, btn) {
   fetch(BASE_URL + sheet)
     .then(res => res.text())
     .then(text => {
-      const json = JSON.parse(text.substring(47, text.length - 2));
+      const json = JSON.parse(text.replace(/^[^\{]+/, '').replace(/;$/, ''));
       const rows = json.table.rows;
 
       rawData = rows.map(r => ({
-        id: r.c[0]?.v ?? "",
-        nama: r.c[2]?.v ?? "",
-        rev25: r.c[4]?.f ?? "",
-        rev26: r.c[6]?.f ?? "",
-        yoy: r.c[7]?.f ?? "",
-        eligible: r.c[9]?.v ?? "",
-        score: toNumber(r.c[10]?.v),
-        rank: toNumber(r.c[11]?.v)
+        id: r.c[0]?.v || "",
+        nama: r.c[2]?.v || "",
+        rev25: r.c[4]?.f || "",
+        rev26: r.c[6]?.f || "",
+        yoy: r.c[7]?.f || "",
+        eligible: r.c[9]?.v || "",
+        score: num(r.c[10]?.v),
+        rank: num(r.c[11]?.v)
       }));
 
       render(rawData);
+    })
+    .catch(err => {
+      console.error("ERROR LOAD DATA:", err);
     });
 }
 
@@ -183,11 +179,9 @@ function render(data) {
 }
 
 document.getElementById("search").addEventListener("input", e => {
-  render(
-    rawData.filter(d =>
-      d.nama.toLowerCase().includes(e.target.value.toLowerCase())
-    )
-  );
+  render(rawData.filter(d =>
+    d.nama.toLowerCase().includes(e.target.value.toLowerCase())
+  ));
 });
 
 document.getElementById("sort").addEventListener("change", e => {
