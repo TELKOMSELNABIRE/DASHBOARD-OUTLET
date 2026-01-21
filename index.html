@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard Outlet</title>
+<title>Dashboard Outlet (Real-Time)</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 
 <style>
 body {
@@ -13,22 +13,18 @@ body {
   background: #f4f6f8;
   margin: 0;
 }
-
 header {
   background: #b51217;
   color: #fff;
   padding: 16px;
   text-align: center;
 }
-
 nav {
   display: flex;
   justify-content: center;
   gap: 10px;
   margin: 20px;
-  flex-wrap: wrap;
 }
-
 nav button {
   padding: 10px 18px;
   border: none;
@@ -37,25 +33,21 @@ nav button {
   cursor: pointer;
   background: #e0e0e0;
 }
-
 nav button.active {
   background: #b51217;
   color: #fff;
 }
-
 .container {
   max-width: 1200px;
   margin: auto;
   padding: 20px;
 }
-
 .search-sort {
   display: flex;
   gap: 10px;
   margin-bottom: 14px;
   flex-wrap: wrap;
 }
-
 .search-sort input,
 .search-sort select {
   padding: 10px;
@@ -63,25 +55,21 @@ nav button.active {
   border: 1px solid #ccc;
   font-family: 'Poppins';
 }
-
 table {
   width: 100%;
   border-collapse: collapse;
   background: #fff;
 }
-
 th, td {
   padding: 12px;
   border-bottom: 1px solid #eee;
   text-align: left;
   font-size: 14px;
 }
-
 th {
   background: #f0f0f0;
   font-weight: 700;
 }
-
 tbody tr:hover {
   background: #fafafa;
 }
@@ -91,23 +79,23 @@ tbody tr:hover {
 <body>
 
 <header>
-  <h2>Dashboard Outlet</h2>
+  <h2>Dashboard Outlet (Real-Time)</h2>
 </header>
 
 <nav>
-  <button class="active" onclick="loadSheet('TRASSER', this)">TRASSER</button>
-  <button onclick="loadSheet('TRAGIS', this)">TRAGIS</button>
-  <button onclick="loadSheet('TRAVO', this)">TRAVO</button>
+  <button class="active" onclick="loadData('TRASSER', this)">TRASSER</button>
+  <button onclick="loadData('TRAGIS', this)">TRAGIS</button>
+  <button onclick="loadData('TRAVO', this)">TRAVO</button>
 </nav>
 
 <div class="container">
 
 <div class="search-sort">
-  <input type="text" id="search" placeholder="Search Outlet...">
+  <input type="text" id="search" placeholder="Search outlet...">
   <select id="sort">
     <option value="">Sort</option>
-    <option value="rank">Rank</option>
-    <option value="score">Score</option>
+    <option value="rank">Sort by Rank</option>
+    <option value="score">Sort by Score</option>
   </select>
 </div>
 
@@ -124,94 +112,77 @@ tbody tr:hover {
   <th>Rank</th>
 </tr>
 </thead>
-<tbody id="data">
-<tr><td colspan="8">Loading...</td></tr>
-</tbody>
+<tbody id="data"></tbody>
 </table>
 
 </div>
 
 <script>
-const BASE_URL =
-"https://docs.google.com/spreadsheets/d/e/2PACX-1vSU1jMmoHiOKZ4imo91F5h9XdcykRG3CbqEQNthOXeVIOh1vsb51khLRXUdJBBfIKKgD3SKb-o2IDHQ/pub?output=csv&sheet=";
+// GANTI DI SINI dengan Web App URL kamu
+const API_URL = "https://script.google.com/macros/s/AKfycbzfkFMws7efeTXbGSbIJEa7ulOgL9uhFkwWErJBCPjYgUE56gSueLZWR0rDouJTJLuVdw/exec";
 
-let rawData = [];
+let allData = [];
 
-function loadSheet(sheet, btn) {
+function loadData(sheet, btn) {
   document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
-  if (btn) btn.classList.add("active");
+  btn.classList.add("active");
 
   document.getElementById("data").innerHTML =
-    `<tr><td colspan="8">Loading...</td></tr>`;
+    "<tr><td colspan='8'>Loading...</td></tr>";
 
-  fetch(BASE_URL + encodeURIComponent(sheet))
-    .then(r => r.text())
-    .then(csv => {
-      const rows = csv.trim().split("\n").slice(1);
-
-      rawData = rows.map(r => {
-        const c = r.split(",");
-        return {
-          id: c[0] || "",
-          nama: c[2] || "",
-          rev25: c[4] || "",
-          rev26: c[6] || "",
-          yoy: c[7] || "",
-          eligible: c[9] || "",
-          score: Number(c[10]) || 0,
-          rank: Number(c[11]) || 0
-        };
-      });
-
-      render(rawData);
+  fetch(`${API_URL}?sheet=${sheet}`)
+    .then(res => res.json())
+    .then(data => {
+      allData = data;
+      renderTable(data);
     })
-    .catch(() => {
+    .catch(err => {
+      console.error(err);
       document.getElementById("data").innerHTML =
-        `<tr><td colspan="8">❌ Gagal memuat data</td></tr>`;
+        "<tr><td colspan='8'>Gagal mengambil data</td></tr>";
     });
 }
 
-function render(data) {
+function renderTable(data) {
   const tbody = document.getElementById("data");
   tbody.innerHTML = "";
-
-  if (data.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="8">Data tidak ditemukan</td></tr>`;
-    return;
-  }
-
   data.forEach(d => {
     tbody.innerHTML += `
       <tr>
-        <td>${d.id}</td>
-        <td>${d.nama}</td>
-        <td>${d.rev25}</td>
-        <td>${d.rev26}</td>
-        <td>${d.yoy}</td>
-        <td>${d.eligible}</td>
-        <td>${d.score}</td>
-        <td>${d.rank}</td>
+        <td>${d["Outlet ID"] || ""}</td>
+        <td>${d["Nama Outlet"] || ""}</td>
+        <td>${d["Rev Jan'25"] || ""}</td>
+        <td>${d["Rev Jan'26"] || ""}</td>
+        <td>${d["YoY"] || ""}</td>
+        <td>${d["Eligible"] || ""}</td>
+        <td>${d["Score"] || ""}</td>
+        <td>${d["Rank"] || ""}</td>
       </tr>
     `;
   });
 }
 
+// SEARCH
 document.getElementById("search").addEventListener("input", e => {
-  const val = e.target.value.toLowerCase();
-  render(rawData.filter(d => d.nama.toLowerCase().includes(val)));
+  const v = e.target.value.toLowerCase();
+  renderTable(allData.filter(d =>
+    (d["Nama Outlet"] || "").toLowerCase().includes(v)
+  ));
 });
 
+// SORT
 document.getElementById("sort").addEventListener("change", e => {
-  if (e.target.value === "rank") {
-    render([...rawData].sort((a,b)=>a.rank-b.rank));
+  const value = e.target.value;
+  if (value === "rank") {
+    renderTable([...allData].sort((a,b) => a["Rank"] - b["Rank"]));
   }
-  if (e.target.value === "score") {
-    render([...rawData].sort((a,b)=>b.score-a.score));
+  if (value === "score") {
+    renderTable([...allData].sort((a,b) => b["Score"] - a["Score"]));
   }
 });
 
-// LOAD DEFAULT
-loadSheet("TRASSER", document.querySelector("nav button"));
+// Load default
+loadData("TRASSER", document.querySelector("nav button.active"));
 </script>
 
 </body>
