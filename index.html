@@ -121,8 +121,8 @@ th {
 </div>
 
 <script>
-const BASE =
-"https://docs.google.com/spreadsheets/d/e/2PACX-1vSU1jMmoHiOKZ4imo91F5h9XdcykRG3CbqEQNthOXeVIOh1vsb51khLRXUdJBBfIKKgD3SKb-o2IDHQ/gviz/tq?sheet=";
+const SHEET_ID =
+"2PACX-1vSU1jMmoHiOKZ4imo91F5h9XdcykRG3CbqEQNthOXeVIOh1vsb51khLRXUdJBBfIKKgD3SKb-o2IDHQ";
 
 let rawData = [];
 
@@ -130,24 +130,29 @@ function loadSheet(sheet, btn) {
   document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
   btn.classList.add("active");
 
-  fetch(BASE + sheet)
+  const url = `https://docs.google.com/spreadsheets/d/e/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${sheet}`;
+
+  fetch(url)
     .then(res => res.text())
     .then(text => {
-      const json = JSON.parse(text.substring(47, text.length - 2));
+      const json = JSON.parse(text.replace(/.*?\(/, '').slice(0, -2));
       const rows = json.table.rows;
 
       rawData = rows.map(r => ({
         id: r.c[0]?.v ?? "",
         nama: r.c[2]?.v ?? "",
-        rev25: r.c[4]?.f ?? r.c[4]?.v ?? "",
-        rev26: r.c[6]?.f ?? r.c[6]?.v ?? "",
-        yoy: r.c[7]?.f ?? r.c[7]?.v ?? "",
+        rev25: r.c[4]?.f ?? "",
+        rev26: r.c[6]?.f ?? "",
+        yoy: r.c[7]?.f ?? "",
         eligible: r.c[9]?.v ?? "",
         score: Number(r.c[10]?.v ?? 0),
         rank: Number(r.c[11]?.v ?? 0)
       }));
 
       render(rawData);
+    })
+    .catch(err => {
+      console.error("ERROR FETCH:", err);
     });
 }
 
