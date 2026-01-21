@@ -106,76 +106,67 @@ th {
 
 <script>
 const SHEET_ID = "175sV8aSZaZK3QUAvy4vVfE6J7DTiO8SNfeVd_qYXbqw";
-let currentData = [];
-let currentSheet = "TRASSER";
+let allData = [];
 
-function sheetURL(name){
-  return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${name}`;
-}
+fetch(SHEET_URL)
+  .then(res => res.text())
+  .then(csv => {
+    const rows = csv.split("\n").slice(1);
 
-function loadSheet(name){
-  currentSheet = name;
-  document.querySelectorAll(".menu button").forEach(b => b.classList.remove("active"));
-  document.getElementById("btn-"+name).classList.add("active");
+    allData = rows.map(r => {
+      const c = r.split(",");
 
-  fetch(sheetURL(name))
-    .then(res => res.text())
-    .then(csv => {
-      const rows = csv.split("\n").slice(1);
-      currentData = rows.map(r => {
-        const c = r.split(",");
-        return {
-          outletId: c[0],
-          name: c[1],
-          rev25: c[2],
-          rev26: c[3],
-          yoy: c[4],
-          score: Number(c[5]),
-          rank: Number(c[6])
-        };
-      });
-      render();
+      return {
+        outletId: c[0],
+        outletName: c[2],
+        rev25: Number(c[4]) || 0,
+        rev26: Number(c[6]) || 0,
+        yoy: c[7],
+        eligible: c[9],
+        score: Number(c[10]) || 0,
+        rank: Number(c[11]) || 0
+      };
     });
-}
 
-function render(){
-  let data = [...currentData];
-  const q = document.getElementById("search").value.toLowerCase();
-  const sort = document.getElementById("sort").value;
+    render(allData);
+  });
 
-  if(q){
-    data = data.filter(d =>
-      d.outletId.toLowerCase().includes(q) ||
-      d.name.toLowerCase().includes(q)
-    );
-  }
+function render(data) {
+  const list = document.getElementById("list");
+  list.innerHTML = "";
 
-  if(sort === "rank-asc") data.sort((a,b)=>a.rank-b.rank);
-  if(sort === "rank-desc") data.sort((a,b)=>b.rank-a.rank);
-  if(sort === "score-asc") data.sort((a,b)=>a.score-b.score);
-  if(sort === "score-desc") data.sort((a,b)=>b.score-a.score);
-
-  const tbody = document.getElementById("tbody");
-  tbody.innerHTML = "";
-  data.forEach(d=>{
-    tbody.innerHTML += `
-      <tr>
-        <td class="rank">${d.rank}</td>
-        <td>${d.outletId}</td>
-        <td>${d.name}</td>
-        <td>${d.rev25}</td>
-        <td>${d.rev26}</td>
-        <td>${d.yoy}</td>
-        <td>${d.score.toLocaleString()}</td>
-      </tr>
+  data.forEach(d => {
+    list.innerHTML += `
+      <div class="card">
+        <b>${d.outletName}</b><br>
+        <small>ID: ${d.outletId}</small><br>
+        <small>Rank: ${d.rank} | Score: ${d.score}</small>
+        <hr>
+        <div>Rev Jan’25: Rp ${d.rev25.toLocaleString()}</div>
+        <div>Rev Jan’26: Rp ${d.rev26.toLocaleString()}</div>
+        <div>YoY: ${d.yoy}</div>
+        <div>Eligible: ${d.eligible}</div>
+      </div>
     `;
   });
 }
 
-document.getElementById("search").addEventListener("input", render);
-document.getElementById("sort").addEventListener("change", render);
+/* SEARCH OUTLET */
+document.getElementById("search").addEventListener("input", e => {
+  const v = e.target.value.toLowerCase();
+  render(allData.filter(d =>
+    d.outletName.toLowerCase().includes(v) ||
+    d.outletId.includes(v)
+  ));
+});
 
-loadSheet("TRASSER");
+/* SORT */
+function sortBy(type) {
+  let sorted = [...allData];
+  if (type === "rank") sorted.sort((a,b) => a.rank - b.rank);
+  if (type === "score") sorted.sort((a,b) => b.score - a.score);
+  render(sorted);
+}
 </script>
 
 </body>
