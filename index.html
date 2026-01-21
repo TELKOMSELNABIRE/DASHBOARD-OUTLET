@@ -123,7 +123,7 @@ th {
 </div>
 
 <script>
-const BASE_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSU1jMmoHiOKZ4imo91F5h9XdcykRG3CbqEQNthOXeVIOh1vsb51khLRXUdJBBfIKKgD3SKb-o2IDHQ/pub?output=csv&sheet=";
+const BASE_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSU1jMmoHiOKZ4imo91F5h9XdcykRG3CbqEQNthOXeVIOh1vsb51khLRXUdJBBfIKKgD3SKb-o2IDHQ/gviz/tq?sheet=";
 
 let rawData = [];
 
@@ -133,21 +133,21 @@ function loadSheet(sheet) {
 
   fetch(BASE_URL + sheet)
     .then(res => res.text())
-    .then(csv => {
-      const rows = csv.split("\n").slice(1);
-      rawData = rows.map(r => {
-        const c = r.split(",");
-        return {
-          id: c[0],
-          nama: c[2],
-          rev25: c[4],
-          rev26: c[6],
-          yoy: c[7],
-          eligible: c[9],
-          score: Number(c[10]),
-          rank: Number(c[11])
-        };
-      });
+    .then(text => {
+      const json = JSON.parse(text.substring(47, text.length - 2));
+      const rows = json.table.rows;
+
+      rawData = rows.map(r => ({
+        id: r.c[0]?.v ?? "",
+        nama: r.c[2]?.v ?? "",
+        rev25: r.c[4]?.f ?? r.c[4]?.v ?? "",
+        rev26: r.c[6]?.f ?? r.c[6]?.v ?? "",
+        yoy: r.c[7]?.f ?? r.c[7]?.v ?? "",
+        eligible: r.c[9]?.v ?? "",
+        score: r.c[10]?.v ?? 0,
+        rank: r.c[11]?.v ?? 0
+      }));
+
       render(rawData);
     });
 }
