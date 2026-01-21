@@ -3,170 +3,188 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard Monitoring Outlet</title>
+<title>Dashboard Outlet</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
 
 <style>
 body {
-  margin: 0;
-  font-family: Arial, sans-serif;
+  font-family: 'Poppins', sans-serif;
   background: #f4f6f8;
+  margin: 0;
 }
+
 header {
-  background: #1f2937;
+  background: #b51217;
   color: #fff;
-  padding: 14px 20px;
-  font-size: 18px;
-  font-weight: bold;
+  padding: 16px;
+  text-align: center;
 }
-.menu {
+
+nav {
   display: flex;
+  justify-content: center;
   gap: 10px;
-  padding: 12px 20px;
-  background: #fff;
+  margin: 20px;
 }
-.menu button {
-  padding: 8px 16px;
+
+nav button {
+  padding: 10px 18px;
   border: none;
-  border-radius: 6px;
-  background: #e5e7eb;
+  border-radius: 8px;
+  font-weight: 600;
   cursor: pointer;
-  font-weight: bold;
+  background: #e0e0e0;
 }
-.menu button.active {
-  background: #2563eb;
+
+nav button.active {
+  background: #b51217;
   color: #fff;
 }
-.controls {
+
+.container {
+  max-width: 1200px;
+  margin: auto;
+  padding: 20px;
+}
+
+.search-sort {
   display: flex;
   gap: 10px;
-  padding: 12px 20px;
+  margin-bottom: 14px;
 }
-.controls input, .controls select {
-  padding: 8px;
-  border-radius: 6px;
+
+.search-sort input,
+.search-sort select {
+  padding: 10px;
+  border-radius: 8px;
   border: 1px solid #ccc;
+  font-family: 'Poppins';
 }
+
 table {
   width: 100%;
   border-collapse: collapse;
   background: #fff;
 }
+
 th, td {
-  padding: 10px;
+  padding: 12px;
   border-bottom: 1px solid #eee;
   text-align: left;
 }
+
 th {
-  background: #f9fafb;
+  background: #f0f0f0;
 }
-.rank {
-  font-weight: bold;
-  color: #16a34a;
-}
-@media(max-width:768px){
-  table { font-size: 12px; }
-}
+
 </style>
 </head>
 
 <body>
 
-<header>Dashboard Monitoring Outlet</header>
+<header>
+  <h2>Dashboard Outlet</h2>
+</header>
 
-<div class="menu">
-  <button onclick="loadSheet('TRASSER')" class="active" id="btn-TRASSER">TRASSER</button>
-  <button onclick="loadSheet('TRAGIS')" id="btn-TRAGIS">TRAGIS</button>
-  <button onclick="loadSheet('TRAVO')" id="btn-TRAVO">TRAVO</button>
-</div>
+<nav>
+  <button onclick="loadSheet('TRASSER')" class="active">TRASSER</button>
+  <button onclick="loadSheet('TRAGIS')">TRAGIS</button>
+  <button onclick="loadSheet('TRAVO')">TRAVO</button>
+</nav>
 
-<div class="controls">
-  <input type="text" id="search" placeholder="Search Outlet ID / Nama">
+<div class="container">
+
+<div class="search-sort">
+  <input type="text" id="search" placeholder="Search Outlet...">
   <select id="sort">
-    <option value="rank-asc">Rank ↑</option>
-    <option value="rank-desc">Rank ↓</option>
-    <option value="score-asc">Score ↑</option>
-    <option value="score-desc">Score ↓</option>
+    <option value="">Sort</option>
+    <option value="rank">Rank</option>
+    <option value="score">Score</option>
   </select>
 </div>
 
 <table>
-  <thead>
-    <tr>
-      <th>Rank</th>
-      <th>Outlet ID</th>
-      <th>Nama Outlet</th>
-      <th>Rev Jan'25</th>
-      <th>Rev Jan'26</th>
-      <th>YoY</th>
-      <th>Score</th>
-    </tr>
-  </thead>
-  <tbody id="tbody"></tbody>
+<thead>
+<tr>
+  <th>Outlet ID</th>
+  <th>Nama Outlet</th>
+  <th>Rev Jan'25</th>
+  <th>Rev Jan'26</th>
+  <th>YoY</th>
+  <th>Eligible</th>
+  <th>Score</th>
+  <th>Rank</th>
+</tr>
+</thead>
+<tbody id="data"></tbody>
 </table>
 
+</div>
+
 <script>
-const SHEET_ID = "175sV8aSZaZK3QUAvy4vVfE6J7DTiO8SNfeVd_qYXbqw";
-let allData = [];
+const BASE_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSU1jMmoHiOKZ4imo91F5h9XdcykRG3CbqEQNthOXeVIOh1vsb51khLRXUdJBBfIKKgD3SKb-o2IDHQ/pub?output=csv&sheet=";
 
-fetch(SHEET_URL)
-  .then(res => res.text())
-  .then(csv => {
-    const rows = csv.split("\n").slice(1);
+let rawData = [];
 
-    allData = rows.map(r => {
-      const c = r.split(",");
+function loadSheet(sheet) {
+  document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
+  event.target.classList.add("active");
 
-      return {
-        outletId: c[0],
-        outletName: c[2],
-        rev25: Number(c[4]) || 0,
-        rev26: Number(c[6]) || 0,
-        yoy: c[7],
-        eligible: c[9],
-        score: Number(c[10]) || 0,
-        rank: Number(c[11]) || 0
-      };
+  fetch(BASE_URL + sheet)
+    .then(res => res.text())
+    .then(csv => {
+      const rows = csv.split("\n").slice(1);
+      rawData = rows.map(r => {
+        const c = r.split(",");
+        return {
+          id: c[0],
+          nama: c[2],
+          rev25: c[4],
+          rev26: c[6],
+          yoy: c[7],
+          eligible: c[9],
+          score: Number(c[10]),
+          rank: Number(c[11])
+        };
+      });
+      render(rawData);
     });
-
-    render(allData);
-  });
+}
 
 function render(data) {
-  const list = document.getElementById("list");
-  list.innerHTML = "";
-
+  const tbody = document.getElementById("data");
+  tbody.innerHTML = "";
   data.forEach(d => {
-    list.innerHTML += `
-      <div class="card">
-        <b>${d.outletName}</b><br>
-        <small>ID: ${d.outletId}</small><br>
-        <small>Rank: ${d.rank} | Score: ${d.score}</small>
-        <hr>
-        <div>Rev Jan’25: Rp ${d.rev25.toLocaleString()}</div>
-        <div>Rev Jan’26: Rp ${d.rev26.toLocaleString()}</div>
-        <div>YoY: ${d.yoy}</div>
-        <div>Eligible: ${d.eligible}</div>
-      </div>
+    tbody.innerHTML += `
+      <tr>
+        <td>${d.id}</td>
+        <td>${d.nama}</td>
+        <td>${d.rev25}</td>
+        <td>${d.rev26}</td>
+        <td>${d.yoy}</td>
+        <td>${d.eligible}</td>
+        <td>${d.score}</td>
+        <td>${d.rank}</td>
+      </tr>
     `;
   });
 }
 
-/* SEARCH OUTLET */
 document.getElementById("search").addEventListener("input", e => {
-  const v = e.target.value.toLowerCase();
-  render(allData.filter(d =>
-    d.outletName.toLowerCase().includes(v) ||
-    d.outletId.includes(v)
-  ));
+  render(rawData.filter(d => d.nama.toLowerCase().includes(e.target.value.toLowerCase())));
 });
 
-/* SORT */
-function sortBy(type) {
-  let sorted = [...allData];
-  if (type === "rank") sorted.sort((a,b) => a.rank - b.rank);
-  if (type === "score") sorted.sort((a,b) => b.score - a.score);
-  render(sorted);
-}
+document.getElementById("sort").addEventListener("change", e => {
+  if (e.target.value === "rank") {
+    render([...rawData].sort((a,b)=>a.rank-b.rank));
+  }
+  if (e.target.value === "score") {
+    render([...rawData].sort((a,b)=>b.score-a.score));
+  }
+});
+
+loadSheet("TRASSER");
 </script>
 
 </body>
