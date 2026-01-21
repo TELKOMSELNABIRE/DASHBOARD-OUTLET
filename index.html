@@ -1,19 +1,100 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>TES DATA GOOGLE SHEET</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            font-size: 14px;
+        }
+        th {
+            background: #2c3e50;
+            color: #fff;
+        }
+        tr:nth-child(even) {
+            background: #f2f2f2;
+        }
+    </style>
+</head>
 <body>
 
-<h2>TES DATA</h2>
-<pre id="out">loading...</pre>
+<h1>TES DATA GOOGLE SHEET</h1>
+
+<table id="dataTable">
+    <thead></thead>
+    <tbody></tbody>
+</table>
 
 <script>
-fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vSU1jMmoHiOKZ4imo91F5h9XdcykRG3CbqEQNthOXeVIOh1vsb51khLRXUdJBBfIKKgD3SKb-o2IDHQ/gviz/tq?tqx=out:json&sheet=TRASSER")
-  .then(r => r.text())
-  .then(t => {
-    document.getElementById("out").innerText = t;
-  })
-  .catch(e => {
-    document.getElementById("out").innerText = e;
-  });
+/* ===============================
+   KONFIGURASI WAJIB
+================================ */
+const SHEET_NAME = "TRASSER"; // GANTI JIKA NAMA SHEET BEDA
+const BASE_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSU1jMmoHiOKZ4imo91F5h9XdcykRG3CbqEQNthOXeVIOh1vsb51khLRXUdJBBfIKKgD3SKb-o2IDHQ/gviz/tq?tqx=out:json&sheet=";
+
+/* ===============================
+   FETCH DATA
+================================ */
+fetch(BASE_URL + encodeURIComponent(SHEET_NAME))
+    .then(res => res.text())
+    .then(text => {
+        // Bersihkan wrapper Google
+        const json = JSON.parse(
+            text
+                .substring(text.indexOf('{'))
+                .slice(0, -2)
+        );
+
+        const table = json.table;
+        renderTable(table);
+    })
+    .catch(err => {
+        alert("GAGAL AMBIL DATA!\nPastikan sheet sudah Publish to Web\n\n" + err);
+    });
+
+/* ===============================
+   RENDER TABLE
+================================ */
+function renderTable(table) {
+    const thead = document.querySelector("#dataTable thead");
+    const tbody = document.querySelector("#dataTable tbody");
+
+    // Header
+    let headerRow = "<tr>";
+    table.cols.forEach(col => {
+        headerRow += `<th>${col.label || ""}</th>`;
+    });
+    headerRow += "</tr>";
+    thead.innerHTML = headerRow;
+
+    // Body
+    let bodyHtml = "";
+    table.rows.forEach(row => {
+        bodyHtml += "<tr>";
+        row.c.forEach(cell => {
+            bodyHtml += `<td>${cell ? cell.v : ""}</td>`;
+        });
+        bodyHtml += "</tr>";
+    });
+    tbody.innerHTML = bodyHtml;
+}
 </script>
 
 </body>
