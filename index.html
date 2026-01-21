@@ -172,7 +172,11 @@ function render(data) {
 }
 
 document.getElementById("search").addEventListener("input", e => {
-  render(rawData.filter(d => d.nama.toLowerCase().includes(e.target.value.toLowerCase())));
+  render(
+    rawData.filter(d =>
+      d.nama.toLowerCase().includes(e.target.value.toLowerCase())
+    )
+  );
 });
 
 document.getElementById("sort").addEventListener("change", e => {
