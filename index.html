@@ -3,81 +3,129 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard Triple-T Nabire</title>
+<title>Dashboard Outlet (Real-Time)</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 
 <style>
+/* GLOBAL */
 body {
   font-family: 'Poppins', sans-serif;
   background: #f4f6f8;
   margin: 0;
 }
+
+/* HEADER */
 header {
+  display: flex;
+  justify-content: space-between; /* judul kiri, logo kanan */
+  align-items: center;
   background: #b51217;
   color: #fff;
-  padding: 16px;
-  text-align: center;
+  padding: 12px 20px;
+  flex-wrap: wrap;
 }
+
+header h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+header .logo {
+  height: 40px;
+  cursor: pointer;
+}
+
+/* NAVIGATION */
 nav {
   display: flex;
   justify-content: center;
   gap: 10px;
-  margin: 20px;
+  margin: 10px 20px;
+  flex-wrap: wrap;
 }
+
 nav button {
-  padding: 10px 18px;
+  padding: 8px 14px;
   border: none;
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
   background: #e0e0e0;
+  font-size: 14px;
 }
+
 nav button.active {
   background: #b51217;
   color: #fff;
 }
+
+/* CONTAINER */
 .container {
   max-width: 1200px;
   margin: auto;
-  padding: 20px;
+  padding: 10px 20px;
 }
+
+/* SEARCH & SORT */
 .search-sort {
   display: flex;
   gap: 10px;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
   flex-wrap: wrap;
 }
+
 .search-sort input,
 .search-sort select {
-  padding: 10px;
+  padding: 8px;
   border-radius: 8px;
   border: 1px solid #ccc;
   font-family: 'Poppins';
+  font-size: 14px;
+  flex: 1 1 150px;
 }
+
+/* TABLE */
 table {
   width: 100%;
   border-collapse: collapse;
   background: #fff;
-}
-th, td {
-  padding: 12px;
-  border-bottom: 1px solid #eee;
-  text-align: left;
   font-size: 14px;
 }
+
+th, td {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  text-align: left;
+}
+
 th {
   background: #f0f0f0;
   font-weight: 700;
 }
+
 tbody tr:hover {
   background: #fafafa;
 }
 
-/* Highlight Rank 1-3 */
+/* HIGHLIGHT RANK */
 .highlight-rank1 td { background-color: #ffd700; }  /* Gold */
 .highlight-rank2 td { background-color: #c0c0c0; }  /* Silver */
 .highlight-rank3 td { background-color: #cd7f32; }  /* Bronze */
+
+/* RESPONSIVE MOBILE */
+@media (max-width: 768px) {
+  header h2 {
+    font-size: 16px;
+  }
+  nav button {
+    font-size: 12px;
+    padding: 6px 10px;
+  }
+  table {
+    font-size: 12px;
+  }
+}
 </style>
 </head>
 
@@ -85,6 +133,9 @@ tbody tr:hover {
 
 <header>
   <h2>Dashboard Triple-T Nabire</h2>
+  <a href="https://www.telkomsel.com/" target="_blank">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/6/6a/Telkomsel_logo.svg" alt="Telkomsel Logo" class="logo">
+  </a>
 </header>
 
 <nav>
@@ -148,7 +199,6 @@ function loadData(sheet, btn) {
     });
 }
 
-// Konversi string "Rp64.378.616" atau "1726%" jadi angka untuk sort
 function parseNumber(str) {
   if(!str) return 0;
   return Number(str.toString().replace(/[Rp.%\s.]/g,''));
