@@ -67,7 +67,7 @@ nav button.active {
   padding: 10px 20px;
 }
 
-/* SEARCH & SORT */
+/* SEARCH */
 .search-sort {
   display: flex;
   gap: 10px;
@@ -75,8 +75,7 @@ nav button.active {
   flex-wrap: wrap;
 }
 
-.search-sort input,
-.search-sort select {
+.search-sort input {
   padding: 8px;
   border-radius: 8px;
   border: 1px solid #ccc;
@@ -133,7 +132,7 @@ tbody tr:hover {
 
 <header>
   <h2>Dashboard Triple-T Nabire</h2>
-      <img src="LOGO TSEL PUTIH.png" alt="Telkomsel Logo" class="logo">
+  <img src="LOGO TSEL PUTIH.png" alt="Telkomsel Logo" class="logo">
 </header>
 
 <nav>
@@ -146,11 +145,6 @@ tbody tr:hover {
 
 <div class="search-sort">
   <input type="text" id="search" placeholder="Search outlet...">
-  <select id="sort">
-    <option value="">Sort</option>
-    <option value="rank">Sort by Rank</option>
-    <option value="score">Sort by Score</option>
-  </select>
 </div>
 
 <table>
@@ -233,17 +227,6 @@ document.getElementById("search").addEventListener("input", e => {
   renderTable(allData.filter(d =>
     (d["Nama Outlet"] || "").toLowerCase().includes(v)
   ));
-});
-
-// SORT
-document.getElementById("sort").addEventListener("change", e => {
-  const value = e.target.value;
-  if (value === "rank") {
-    renderTable([...allData].sort((a,b) => parseNumber(a["Rank"]) - parseNumber(b["Rank"])));
-  }
-  if (value === "score") {
-    renderTable([...allData].sort((a,b) => parseNumber(b["Score"]) - parseNumber(a["Score"])));
-  }
 });
 
 // Load default
