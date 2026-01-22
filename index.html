@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard Outlet (Real-Time)</title>
+<title>Dashboard Outlet (Master-Detail)</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 
@@ -18,7 +18,7 @@ body {
 /* HEADER */
 header {
   display: flex;
-  justify-content: space-between; /* judul kiri, logo kanan */
+  justify-content: space-between;
   align-items: center;
   background: #b51217;
   color: #fff;
@@ -36,7 +36,7 @@ header .logo {
   cursor: pointer;
 }
 
-/* NAVIGATION */
+/* NAV */
 nav {
   display: flex;
   justify-content: center;
@@ -108,9 +108,21 @@ tbody tr:hover {
 }
 
 /* HIGHLIGHT RANK */
-.highlight-rank1 td { background-color: #ffd700; }  /* Gold */
-.highlight-rank2 td { background-color: #c0c0c0; }  /* Silver */
-.highlight-rank3 td { background-color: #cd7f32; }  /* Bronze */
+.highlight-rank1 td { background-color: #ffd700; }
+.highlight-rank2 td { background-color: #c0c0c0; }
+.highlight-rank3 td { background-color: #cd7f32; }
+
+/* DETAIL ROW */
+.detail-row {
+  display: none;
+  background-color: #f9f9f9;
+  font-size: 13px;
+}
+
+.detail-row td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #ddd;
+}
 
 /* RESPONSIVE MOBILE */
 @media (max-width: 768px) {
@@ -127,12 +139,11 @@ tbody tr:hover {
 }
 </style>
 </head>
-
 <body>
 
 <header>
-  <h2>Dashboard Triple-T Nabire</h2>
-  <img src="LOGO TSEL PUTIH.png" alt="Telkomsel Logo" class="logo">
+  <h2>Dashboard Outlet (Master-Detail)</h2>
+  <img src="logo.png" alt="Telkomsel Logo" class="logo">
 </header>
 
 <nav>
@@ -142,41 +153,41 @@ tbody tr:hover {
 </nav>
 
 <div class="container">
+  <div class="search-sort">
+    <input type="text" id="search" placeholder="Search outlet...">
+  </div>
 
-<div class="search-sort">
-  <input type="text" id="search" placeholder="Search outlet...">
-</div>
-
-<table>
-<thead>
-<tr>
-  <th>Rank</th>
-  <th>Outlet ID</th>
-  <th>Nama Outlet</th>
-  <th>Eligible</th>
-  <th>Score</th>
-  <th>Rev Jan'25</th>
-  <th>Rev Jan'26</th>
-  <th>YoY</th>
-</tr>
-</thead>
-<tbody id="data"></tbody>
-</table>
-
+  <table>
+    <thead>
+      <tr>
+        <th>Rank</th>
+        <th>Nama Outlet</th>
+        <th>Eligible</th>
+        <th>Score</th>
+        <th>Detail</th>
+      </tr>
+    </thead>
+    <tbody id="data"></tbody>
+  </table>
 </div>
 
 <script>
-// GANTI DI SINI dengan Web App URL kamu
+// GANTI API URL sesuai Web App kamu
 const API_URL = "https://script.google.com/macros/s/AKfycbyUkRm2WLla2Vb65Lv892KAsixSCjQbrFrjPVEfe3UNA0woDPDCY5Rs-QeL9QFlnFn-7g/exec";
 
 let allData = [];
+
+function parseNumber(str) {
+  if(!str) return 0;
+  return Number(str.toString().replace(/[Rp.%\s.]/g,''));
+}
 
 function loadData(sheet, btn) {
   document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
   btn.classList.add("active");
 
-  document.getElementById("data").innerHTML =
-    "<tr><td colspan='8'>Loading...</td></tr>";
+  const tbody = document.getElementById("data");
+  tbody.innerHTML = "<tr><td colspan='5'>Loading...</td></tr>";
 
   fetch(`${API_URL}?sheet=${sheet}`)
     .then(res => res.json())
@@ -186,39 +197,49 @@ function loadData(sheet, btn) {
     })
     .catch(err => {
       console.error(err);
-      document.getElementById("data").innerHTML =
-        "<tr><td colspan='8'>Gagal mengambil data</td></tr>";
+      tbody.innerHTML = "<tr><td colspan='5'>Gagal mengambil data</td></tr>";
     });
-}
-
-function parseNumber(str) {
-  if(!str) return 0;
-  return Number(str.toString().replace(/[Rp.%\s.]/g,''));
 }
 
 function renderTable(data) {
   const tbody = document.getElementById("data");
   tbody.innerHTML = "";
-  data.forEach(d => {
+  data.forEach((d, idx) => {
     let rank = parseNumber(d["Rank"]);
     let rowClass = "";
     if(rank === 1) rowClass = "highlight-rank1";
     else if(rank === 2) rowClass = "highlight-rank2";
     else if(rank === 3) rowClass = "highlight-rank3";
 
+    // Row utama
     tbody.innerHTML += `
       <tr class="${rowClass}">
         <td>${d["Rank"] || ""}</td>
-        <td>${d["Outlet ID"] || ""}</td>
         <td>${d["Nama Outlet"] || ""}</td>
         <td>${d["Eligible"] || ""}</td>
         <td>${d["Score"] || ""}</td>
-        <td>${d["Rev Jan'25"] || ""}</td>
-        <td>${d["Rev Jan'26"] || ""}</td>
-        <td>${d["YoY"] || ""}</td>
+        <td><button onclick="toggleDetail(${idx})">Detail</button></td>
+      </tr>
+    `;
+
+    // Row detail
+    tbody.innerHTML += `
+      <tr class="detail-row" id="detail-${idx}">
+        <td colspan="5">
+          <strong>Outlet ID:</strong> ${d["Outlet ID"] || ""} <br>
+          <strong>Rev Jan'25:</strong> ${d["Rev Jan'25"] || ""} <br>
+          <strong>Rev Jan'26:</strong> ${d["Rev Jan'26"] || ""} <br>
+          <strong>YoY:</strong> ${d["YoY"] || ""}
+        </td>
       </tr>
     `;
   });
+}
+
+function toggleDetail(idx) {
+  const row = document.getElementById(`detail-${idx}`);
+  if(row.style.display === "table-row") row.style.display = "none";
+  else row.style.display = "table-row";
 }
 
 // SEARCH
