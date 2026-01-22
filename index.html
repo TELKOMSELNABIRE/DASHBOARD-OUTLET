@@ -208,14 +208,14 @@ function renderTable(data) {
 
     tbody.innerHTML += `
       <tr class="${rowClass}">
+        <td>${d["Rank"] || ""}</td>
         <td>${d["Outlet ID"] || ""}</td>
         <td>${d["Nama Outlet"] || ""}</td>
+        <td>${d["Eligible"] || ""}</td>
+        <td>${d["Score"] || ""}</td>
         <td>${d["Rev Jan'25"] || ""}</td>
         <td>${d["Rev Jan'26"] || ""}</td>
         <td>${d["YoY"] || ""}</td>
-        <td>${d["Eligible"] || ""}</td>
-        <td>${d["Score"] || ""}</td>
-        <td>${d["Rank"] || ""}</td>
       </tr>
     `;
   });
