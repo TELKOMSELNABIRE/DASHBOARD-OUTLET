@@ -3,12 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard Outlet (Real-Time)</title>
+<title>Dashboard Outlet</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 
 <style>
-/* GLOBAL */
 body {
   font-family: 'Poppins', sans-serif;
   background: #f4f6f8;
@@ -18,7 +17,7 @@ body {
 /* HEADER */
 header {
   display: flex;
-  justify-content: space-between; /* judul kiri, logo kanan */
+  justify-content: space-between;
   align-items: center;
   background: #b51217;
   color: #fff;
@@ -33,10 +32,9 @@ header h2 {
 
 header .logo {
   height: 40px;
-  cursor: pointer;
 }
 
-/* NAVIGATION */
+/* NAV */
 nav {
   display: flex;
   justify-content: center;
@@ -68,20 +66,12 @@ nav button.active {
 }
 
 /* SEARCH */
-.search-sort {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 10px;
-  flex-wrap: wrap;
-}
-
 .search-sort input {
   padding: 8px;
   border-radius: 8px;
   border: 1px solid #ccc;
-  font-family: 'Poppins';
-  font-size: 14px;
-  flex: 1 1 150px;
+  width: 100%;
+  margin-bottom: 10px;
 }
 
 /* TABLE */
@@ -108,31 +98,23 @@ tbody tr:hover {
 }
 
 /* HIGHLIGHT RANK */
-.highlight-rank1 td { background-color: #ffd700; }  /* Gold */
-.highlight-rank2 td { background-color: #c0c0c0; }  /* Silver */
-.highlight-rank3 td { background-color: #cd7f32; }  /* Bronze */
+.highlight-rank1 td { background-color: #e8f5e9; }
+.highlight-rank2 td { background-color: #f1f8e9; }
+.highlight-rank3 td { background-color: #fffde7; }
 
-/* RESPONSIVE MOBILE */
+/* RESPONSIVE */
 @media (max-width: 768px) {
-  header h2 {
-    font-size: 16px;
-  }
-  nav button {
-    font-size: 12px;
-    padding: 6px 10px;
-  }
   table {
     font-size: 12px;
   }
 }
 </style>
 </head>
-
 <body>
 
 <header>
-  <h2>Dashboard Outlet (Real-Time)</h2>
-  <img src="logo.png" alt="Telkomsel Logo" class="logo">
+  <h2>Dashboard Outlet</h2>
+  <img src="logo.png" class="logo" alt="Telkomsel">
 </header>
 
 <nav>
@@ -142,41 +124,41 @@ tbody tr:hover {
 </nav>
 
 <div class="container">
-
-<div class="search-sort">
   <input type="text" id="search" placeholder="Search outlet...">
-</div>
 
-<table>
-<thead>
-<tr>
-  <th>Outlet ID</th>
-  <th>Nama Outlet</th>
-  <th>Rev Jan'25</th>
-  <th>Rev Jan'26</th>
-  <th>YoY</th>
-  <th>Eligible</th>
-  <th>Score</th>
-  <th>Rank</th>
-</tr>
-</thead>
-<tbody id="data"></tbody>
-</table>
-
+  <table>
+    <thead>
+      <tr>
+        <th>Rank</th>
+        <th>Outlet ID</th>
+        <th>Nama Outlet</th>
+        <th>Eligible</th>
+        <th>Score</th>
+        <th>Rev Jan'25</th>
+        <th>Rev Jan'26</th>
+        <th>YoY</th>
+      </tr>
+    </thead>
+    <tbody id="data"></tbody>
+  </table>
 </div>
 
 <script>
-// GANTI DI SINI dengan Web App URL kamu
 const API_URL = "https://script.google.com/macros/s/AKfycbyUkRm2WLla2Vb65Lv892KAsixSCjQbrFrjPVEfe3UNA0woDPDCY5Rs-QeL9QFlnFn-7g/exec";
 
 let allData = [];
+
+function parseNumber(str) {
+  if (!str) return 0;
+  return Number(str.toString().replace(/[Rp.%\s.]/g, ""));
+}
 
 function loadData(sheet, btn) {
   document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
   btn.classList.add("active");
 
-  document.getElementById("data").innerHTML =
-    "<tr><td colspan='8'>Loading...</td></tr>";
+  const tbody = document.getElementById("data");
+  tbody.innerHTML = "<tr><td colspan='8'>Loading...</td></tr>";
 
   fetch(`${API_URL}?sheet=${sheet}`)
     .then(res => res.json())
@@ -184,44 +166,37 @@ function loadData(sheet, btn) {
       allData = data;
       renderTable(data);
     })
-    .catch(err => {
-      console.error(err);
-      document.getElementById("data").innerHTML =
-        "<tr><td colspan='8'>Gagal mengambil data</td></tr>";
+    .catch(() => {
+      tbody.innerHTML = "<tr><td colspan='8'>Gagal mengambil data</td></tr>";
     });
-}
-
-function parseNumber(str) {
-  if(!str) return 0;
-  return Number(str.toString().replace(/[Rp.%\s.]/g,''));
 }
 
 function renderTable(data) {
   const tbody = document.getElementById("data");
   tbody.innerHTML = "";
+
   data.forEach(d => {
-    let rank = parseNumber(d["Rank"]);
+    const rank = parseNumber(d["Rank"]);
     let rowClass = "";
-    if(rank === 1) rowClass = "highlight-rank1";
-    else if(rank === 2) rowClass = "highlight-rank2";
-    else if(rank === 3) rowClass = "highlight-rank3";
+    if (rank === 1) rowClass = "highlight-rank1";
+    else if (rank === 2) rowClass = "highlight-rank2";
+    else if (rank === 3) rowClass = "highlight-rank3";
 
     tbody.innerHTML += `
       <tr class="${rowClass}">
+        <td>${d["Rank"] || ""}</td>
         <td>${d["Outlet ID"] || ""}</td>
         <td>${d["Nama Outlet"] || ""}</td>
+        <td>${d["Eligible"] || ""}</td>
+        <td>${d["Score"] || ""}</td>
         <td>${d["Rev Jan'25"] || ""}</td>
         <td>${d["Rev Jan'26"] || ""}</td>
         <td>${d["YoY"] || ""}</td>
-        <td>${d["Eligible"] || ""}</td>
-        <td>${d["Score"] || ""}</td>
-        <td>${d["Rank"] || ""}</td>
       </tr>
     `;
   });
 }
 
-// SEARCH
 document.getElementById("search").addEventListener("input", e => {
   const v = e.target.value.toLowerCase();
   renderTable(allData.filter(d =>
@@ -229,7 +204,7 @@ document.getElementById("search").addEventListener("input", e => {
   ));
 });
 
-// Load default
+// default load
 loadData("TRASSER", document.querySelector("nav button.active"));
 </script>
 
