@@ -3,255 +3,179 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard Triple-T Nabire</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<title>Dashboard Monitoring Outlet</title>
 
 <style>
-/* GLOBAL */
 body {
-  font-family: 'Poppins', sans-serif;
+  margin: 0;
+  font-family: Arial, sans-serif;
   background: #f4f6f8;
-  margin: 0;
 }
-
-/* HEADER */
 header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #b51217;
+  background: #1f2937;
   color: #fff;
-  padding: 12px 20px;
-  flex-wrap: wrap;
-}
-
-header h2 {
-  margin: 0;
+  padding: 14px 20px;
   font-size: 18px;
+  font-weight: bold;
 }
-
-header .logo {
-  height: 40px;
-  cursor: pointer;
-}
-
-/* NAV */
-nav {
+.menu {
   display: flex;
-  justify-content: center;
   gap: 10px;
-  margin: 10px 20px;
-  flex-wrap: wrap;
+  padding: 12px 20px;
+  background: #fff;
 }
-
-nav button {
-  padding: 8px 14px;
+.menu button {
+  padding: 8px 16px;
   border: none;
-  border-radius: 8px;
-  font-weight: 600;
+  border-radius: 6px;
+  background: #e5e7eb;
   cursor: pointer;
-  background: #e0e0e0;
-  font-size: 14px;
+  font-weight: bold;
 }
-
-nav button.active {
-  background: #b51217;
+.menu button.active {
+  background: #2563eb;
   color: #fff;
 }
-
-/* CONTAINER */
-.container {
-  max-width: 1200px;
-  margin: auto;
-  padding: 10px 20px;
-}
-
-/* SEARCH */
-.search-sort {
+.controls {
   display: flex;
   gap: 10px;
-  margin-bottom: 10px;
-  flex-wrap: wrap;
+  padding: 12px 20px;
 }
-
-.search-sort input {
+.controls input, .controls select {
   padding: 8px;
-  border-radius: 8px;
+  border-radius: 6px;
   border: 1px solid #ccc;
-  font-family: 'Poppins';
-  font-size: 14px;
-  flex: 1 1 150px;
 }
-
-/* TABLE */
 table {
   width: 100%;
   border-collapse: collapse;
   background: #fff;
-  font-size: 14px;
 }
-
 th, td {
   padding: 10px;
   border-bottom: 1px solid #eee;
   text-align: left;
 }
-
 th {
-  background: #f0f0f0;
-  font-weight: 700;
+  background: #f9fafb;
 }
-
-tbody tr:hover {
-  background: #fafafa;
+.rank {
+  font-weight: bold;
+  color: #16a34a;
 }
-
-/* HIGHLIGHT RANK */
-.highlight-rank1 td { background-color: #ffd700; }
-.highlight-rank2 td { background-color: #c0c0c0; }
-.highlight-rank3 td { background-color: #cd7f32; }
-
-/* DETAIL ROW */
-.detail-row {
-  display: none;
-  background-color: #f9f9f9;
-  font-size: 13px;
-}
-
-.detail-row td {
-  padding: 8px 10px;
-  border-bottom: 1px solid #ddd;
-}
-
-/* RESPONSIVE MOBILE */
-@media (max-width: 768px) {
-  header h2 {
-    font-size: 16px;
-  }
-  nav button {
-    font-size: 12px;
-    padding: 6px 10px;
-  }
-  table {
-    font-size: 12px;
-  }
+@media(max-width:768px){
+  table { font-size: 12px; }
 }
 </style>
 </head>
+
 <body>
 
-<header>
-  <h2>Dashboard Triple-T Nabire</h2>
-  <img src="LOGO TSEL PUTIH.png" alt="Telkomsel Logo" class="logo">
-</header>
+<header>Dashboard Monitoring Outlet</header>
 
-<nav>
-  <button class="active" onclick="loadData('TRASSER', this)">TRASSER</button>
-  <button onclick="loadData('TRAGIS', this)">TRAGIS</button>
-  <button onclick="loadData('TRAVO', this)">TRAVO</button>
-</nav>
-
-<div class="container">
-  <div class="search-sort">
-    <input type="text" id="search" placeholder="Search outlet...">
-  </div>
-
-  <table>
-    <thead>
-      <tr>
-        <th>Rank</th>
-        <th>Nama Outlet</th>
-        <th>Eligible</th>
-        <th>Score</th>
-        <th>Detail</th>
-      </tr>
-    </thead>
-    <tbody id="data"></tbody>
-  </table>
+<div class="menu">
+  <button onclick="loadSheet('TRASSER')" class="active" id="btn-TRASSER">TRASSER</button>
+  <button onclick="loadSheet('TRAGIS')" id="btn-TRAGIS">TRAGIS</button>
+  <button onclick="loadSheet('TRAVO')" id="btn-TRAVO">TRAVO</button>
 </div>
 
+<div class="controls">
+  <input type="text" id="search" placeholder="Search Outlet ID / Nama">
+  <select id="sort">
+    <option value="rank-asc">Rank ↑</option>
+    <option value="rank-desc">Rank ↓</option>
+    <option value="score-asc">Score ↑</option>
+    <option value="score-desc">Score ↓</option>
+  </select>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Rank</th>
+      <th>Outlet ID</th>
+      <th>Nama Outlet</th>
+      <th>Rev Jan'25</th>
+      <th>Rev Jan'26</th>
+      <th>YoY</th>
+      <th>Score</th>
+    </tr>
+  </thead>
+  <tbody id="tbody"></tbody>
+</table>
+
 <script>
-// GANTI API URL sesuai Web App kamu
-const API_URL = "https://script.google.com/macros/s/AKfycbyUkRm2WLla2Vb65Lv892KAsixSCjQbrFrjPVEfe3UNA0woDPDCY5Rs-QeL9QFlnFn-7g/exec";
+const SHEET_ID = "175sV8aSZaZK3QUAvy4vVfE6J7DTiO8SNfeVd_qYXbqw";
+let currentData = [];
+let currentSheet = "TRASSER";
 
-let allData = [];
-
-function parseNumber(str) {
-  if(!str) return 0;
-  return Number(str.toString().replace(/[Rp.%\s.]/g,''));
+function sheetURL(name){
+  return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${name}`;
 }
 
-function loadData(sheet, btn) {
-  document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
-  btn.classList.add("active");
+function loadSheet(name){
+  currentSheet = name;
+  document.querySelectorAll(".menu button").forEach(b => b.classList.remove("active"));
+  document.getElementById("btn-"+name).classList.add("active");
 
-  const tbody = document.getElementById("data");
-  tbody.innerHTML = "<tr><td colspan='5'>Loading...</td></tr>";
-
-  fetch(`${API_URL}?sheet=${sheet}`)
-    .then(res => res.json())
-    .then(data => {
-      allData = data;
-      renderTable(data);
-    })
-    .catch(err => {
-      console.error(err);
-      tbody.innerHTML = "<tr><td colspan='5'>Gagal mengambil data</td></tr>";
+  fetch(sheetURL(name))
+    .then(res => res.text())
+    .then(csv => {
+      const rows = csv.split("\n").slice(1);
+      currentData = rows.map(r => {
+        const c = r.split(",");
+        return {
+          outletId: c[0],
+          name: c[1],
+          rev25: c[2],
+          rev26: c[3],
+          yoy: c[4],
+          score: Number(c[5]),
+          rank: Number(c[6])
+        };
+      });
+      render();
     });
 }
 
-function renderTable(data) {
-  const tbody = document.getElementById("data");
+function render(){
+  let data = [...currentData];
+  const q = document.getElementById("search").value.toLowerCase();
+  const sort = document.getElementById("sort").value;
+
+  if(q){
+    data = data.filter(d =>
+      d.outletId.toLowerCase().includes(q) ||
+      d.name.toLowerCase().includes(q)
+    );
+  }
+
+  if(sort === "rank-asc") data.sort((a,b)=>a.rank-b.rank);
+  if(sort === "rank-desc") data.sort((a,b)=>b.rank-a.rank);
+  if(sort === "score-asc") data.sort((a,b)=>a.score-b.score);
+  if(sort === "score-desc") data.sort((a,b)=>b.score-a.score);
+
+  const tbody = document.getElementById("tbody");
   tbody.innerHTML = "";
-  data.forEach((d, idx) => {
-    let rank = parseNumber(d["Rank"]);
-    let rowClass = "";
-    if(rank === 1) rowClass = "highlight-rank1";
-    else if(rank === 2) rowClass = "highlight-rank2";
-    else if(rank === 3) rowClass = "highlight-rank3";
-
-    // Row utama
+  data.forEach(d=>{
     tbody.innerHTML += `
-      <tr class="${rowClass}">
-        <td>${d["Rank"] || ""}</td>
-        <td>${d["Nama Outlet"] || ""}</td>
-        <td>${d["Eligible"] || ""}</td>
-        <td>${d["Score"] || ""}</td>
-        <td><button onclick="toggleDetail(${idx})">Detail</button></td>
-      </tr>
-    `;
-
-    // Row detail
-    tbody.innerHTML += `
-      <tr class="detail-row" id="detail-${idx}">
-        <td colspan="5">
-          <strong>Outlet ID:</strong> ${d["Outlet ID"] || ""} <br>
-          <strong>Rev Jan'25:</strong> ${d["Rev Jan'25"] || ""} <br>
-          <strong>Rev Jan'26:</strong> ${d["Rev Jan'26"] || ""} <br>
-          <strong>YoY:</strong> ${d["YoY"] || ""}
-        </td>
+      <tr>
+        <td class="rank">${d.rank}</td>
+        <td>${d.outletId}</td>
+        <td>${d.name}</td>
+        <td>${d.rev25}</td>
+        <td>${d.rev26}</td>
+        <td>${d.yoy}</td>
+        <td>${d.score.toLocaleString()}</td>
       </tr>
     `;
   });
 }
 
-function toggleDetail(idx) {
-  const row = document.getElementById(`detail-${idx}`);
-  if(row.style.display === "table-row") row.style.display = "none";
-  else row.style.display = "table-row";
-}
+document.getElementById("search").addEventListener("input", render);
+document.getElementById("sort").addEventListener("change", render);
 
-// SEARCH
-document.getElementById("search").addEventListener("input", e => {
-  const v = e.target.value.toLowerCase();
-  renderTable(allData.filter(d =>
-    (d["Nama Outlet"] || "").toLowerCase().includes(v)
-  ));
-});
-
-// Load default
-loadData("TRASSER", document.querySelector("nav button.active"));
+loadSheet("TRASSER");
 </script>
 
 </body>
