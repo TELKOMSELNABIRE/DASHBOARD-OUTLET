@@ -24,14 +24,7 @@ header {
   padding: 12px 20px;
 }
 
-header h2 {
-  margin: 0;
-  font-size: 18px;
-}
-
-.logo {
-  height: 40px;
-}
+.logo { height: 40px; }
 
 /* NAV */
 nav {
@@ -47,7 +40,6 @@ nav button {
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
-  background: #e0e0e0;
 }
 
 nav button.active {
@@ -65,9 +57,9 @@ nav button.active {
 input {
   width: 100%;
   padding: 8px;
+  margin-bottom: 10px;
   border-radius: 8px;
   border: 1px solid #ccc;
-  margin-bottom: 10px;
 }
 
 /* TABLE */
@@ -82,15 +74,12 @@ th, td {
   border-bottom: 1px solid #eee;
 }
 
-th {
-  background: #f0f0f0;
-}
+th { background: #f0f0f0; }
 
 /* HIGHLIGHT */
 .highlight-rank1 td { background: #e8f5e9; }
 .highlight-rank2 td { background: #f1f8e9; }
 .highlight-rank3 td { background: #fffde7; }
-
 </style>
 </head>
 
@@ -149,14 +138,9 @@ function loadData(sheet, btn) {
   fetch(`${API_URL}?sheet=${sheet}`)
     .then(res => res.json())
     .then(data => {
-      console.log("DATA:", data);
+      console.log("DATA MASUK:", data);
 
-      if (!Array.isArray(data)) {
-        tbody.innerHTML = "<tr><td colspan='8'>Format data salah</td></tr>";
-        return;
-      }
-
-      if (data.length === 0) {
+      if (!data || data.length === 0) {
         tbody.innerHTML = "<tr><td colspan='8'>Data kosong</td></tr>";
         return;
       }
@@ -170,32 +154,57 @@ function loadData(sheet, btn) {
     });
 }
 
-// render tabel
+// render tabel (support ARRAY & OBJECT)
 function renderTable(data) {
   const tbody = document.getElementById("data");
   let html = "";
 
   data.forEach(d => {
-    if (!Array.isArray(d)) return;
 
-    // mapping sesuai spreadsheet
-    const rank = parseNumber(d[9]);
+    let row;
+
+    // 🔥 SUPPORT 2 FORMAT
+    if (Array.isArray(d)) {
+      row = {
+        outlet: d[0],
+        nama: d[2],
+        rev1: d[4],
+        rev2: d[5],
+        mom: d[6],
+        eligible: d[7],
+        score: d[8],
+        rank: d[9]
+      };
+    } else {
+      row = {
+        outlet: d["Outlet ID"],
+        nama: d["Nama Outlet"],
+        rev1: d["Rev SS Bulan Lalu"],
+        rev2: d["Rev SS Bulan Ini"],
+        mom: d["MoM"],
+        eligible: d["Eligible"],
+        score: d["Score"],
+        rank: d["Rank"]
+      };
+    }
+
+    const rankNum = parseNumber(row.rank);
 
     let rowClass = "";
-    if (rank === 1) rowClass = "highlight-rank1";
-    else if (rank === 2) rowClass = "highlight-rank2";
-    else if (rank === 3) rowClass = "highlight-rank3";
+    if (rankNum === 1) rowClass = "highlight-rank1";
+    else if (rankNum === 2) rowClass = "highlight-rank2";
+    else if (rankNum === 3) rowClass = "highlight-rank3";
 
     html += `
       <tr class="${rowClass}">
-        <td>${d[9] ?? ""}</td>
-        <td>${d[0] ?? ""}</td>
-        <td>${d[2] ?? ""}</td>
-        <td>${d[7] ?? ""}</td>
-        <td>${d[8] ?? ""}</td>
-        <td>${d[4] ?? ""}</td>
-        <td>${d[5] ?? ""}</td>
-        <td>${d[6] ?? ""}</td>
+        <td>${row.rank || ""}</td>
+        <td>${row.outlet || ""}</td>
+        <td>${row.nama || ""}</td>
+        <td>${row.eligible || ""}</td>
+        <td>${row.score || ""}</td>
+        <td>${row.rev1 || ""}</td>
+        <td>${row.rev2 || ""}</td>
+        <td>${row.mom || ""}</td>
       </tr>
     `;
   });
@@ -207,14 +216,15 @@ function renderTable(data) {
 document.getElementById("search").addEventListener("input", e => {
   const v = e.target.value.toLowerCase();
 
-  const filtered = allData.filter(d =>
-    Array.isArray(d) && (d[2] || "").toString().toLowerCase().includes(v)
-  );
+  const filtered = allData.filter(d => {
+    let nama = Array.isArray(d) ? d[2] : d["Nama Outlet"];
+    return (nama || "").toString().toLowerCase().includes(v);
+  });
 
   renderTable(filtered);
 });
 
-// load pertama
+// load awal
 loadData("TRASSER", document.querySelector("nav button.active"));
 </script>
 
