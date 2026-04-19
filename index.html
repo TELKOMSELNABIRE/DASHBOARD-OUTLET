@@ -22,7 +22,6 @@ header {
   background: #b51217;
   color: #fff;
   padding: 12px 20px;
-  flex-wrap: wrap;
 }
 
 header h2 {
@@ -30,7 +29,7 @@ header h2 {
   font-size: 18px;
 }
 
-header .logo {
+.logo {
   height: 40px;
 }
 
@@ -39,8 +38,7 @@ nav {
   display: flex;
   justify-content: center;
   gap: 10px;
-  margin: 10px 20px;
-  flex-wrap: wrap;
+  margin: 10px;
 }
 
 nav button {
@@ -50,7 +48,6 @@ nav button {
   font-weight: 600;
   cursor: pointer;
   background: #e0e0e0;
-  font-size: 14px;
 }
 
 nav button.active {
@@ -65,12 +62,11 @@ nav button.active {
   padding: 10px 20px;
 }
 
-/* SEARCH */
 input {
+  width: 100%;
   padding: 8px;
   border-radius: 8px;
   border: 1px solid #ccc;
-  width: 100%;
   margin-bottom: 10px;
 }
 
@@ -79,32 +75,22 @@ table {
   width: 100%;
   border-collapse: collapse;
   background: #fff;
-  font-size: 14px;
 }
 
 th, td {
   padding: 10px;
   border-bottom: 1px solid #eee;
-  text-align: left;
 }
 
 th {
   background: #f0f0f0;
-  font-weight: 700;
-}
-
-tbody tr:hover {
-  background: #fafafa;
 }
 
 /* HIGHLIGHT */
-.highlight-rank1 td { background-color: #e8f5e9; }
-.highlight-rank2 td { background-color: #f1f8e9; }
-.highlight-rank3 td { background-color: #fffde7; }
+.highlight-rank1 td { background: #e8f5e9; }
+.highlight-rank2 td { background: #f1f8e9; }
+.highlight-rank3 td { background: #fffde7; }
 
-@media (max-width: 768px) {
-  table { font-size: 12px; }
-}
 </style>
 </head>
 
@@ -146,7 +132,7 @@ const API_URL = "https://script.google.com/macros/s/AKfycbyUkRm2WLla2Vb65Lv892KA
 
 let allData = [];
 
-// bersihin angka (Rp, %, dll)
+// parsing angka
 function parseNumber(str) {
   if (!str) return 0;
   return Number(str.toString().replace(/[Rp,%\s.]/g, ""));
@@ -163,10 +149,23 @@ function loadData(sheet, btn) {
   fetch(`${API_URL}?sheet=${sheet}`)
     .then(res => res.json())
     .then(data => {
+      console.log("DATA:", data);
+
+      if (!Array.isArray(data)) {
+        tbody.innerHTML = "<tr><td colspan='8'>Format data salah</td></tr>";
+        return;
+      }
+
+      if (data.length === 0) {
+        tbody.innerHTML = "<tr><td colspan='8'>Data kosong</td></tr>";
+        return;
+      }
+
       allData = data;
       renderTable(data);
     })
-    .catch(() => {
+    .catch(err => {
+      console.error("ERROR:", err);
       tbody.innerHTML = "<tr><td colspan='8'>Gagal mengambil data</td></tr>";
     });
 }
@@ -174,11 +173,12 @@ function loadData(sheet, btn) {
 // render tabel
 function renderTable(data) {
   const tbody = document.getElementById("data");
-
   let html = "";
 
   data.forEach(d => {
-    // mapping sesuai spreadsheet kamu
+    if (!Array.isArray(d)) return;
+
+    // mapping sesuai spreadsheet
     const rank = parseNumber(d[9]);
 
     let rowClass = "";
@@ -188,19 +188,19 @@ function renderTable(data) {
 
     html += `
       <tr class="${rowClass}">
-        <td>${d[9] || ""}</td>  <!-- Rank -->
-        <td>${d[0] || ""}</td>  <!-- Outlet ID -->
-        <td>${d[2] || ""}</td>  <!-- Nama Outlet -->
-        <td>${d[7] || ""}</td>  <!-- Eligible -->
-        <td>${d[8] || ""}</td>  <!-- Score -->
-        <td>${d[4] || ""}</td>  <!-- Rev M-1 -->
-        <td>${d[5] || ""}</td>  <!-- Rev M -->
-        <td>${d[6] || ""}</td>  <!-- MoM -->
+        <td>${d[9] ?? ""}</td>
+        <td>${d[0] ?? ""}</td>
+        <td>${d[2] ?? ""}</td>
+        <td>${d[7] ?? ""}</td>
+        <td>${d[8] ?? ""}</td>
+        <td>${d[4] ?? ""}</td>
+        <td>${d[5] ?? ""}</td>
+        <td>${d[6] ?? ""}</td>
       </tr>
     `;
   });
 
-  tbody.innerHTML = html;
+  tbody.innerHTML = html || "<tr><td colspan='8'>Tidak ada data</td></tr>";
 }
 
 // search
@@ -208,13 +208,13 @@ document.getElementById("search").addEventListener("input", e => {
   const v = e.target.value.toLowerCase();
 
   const filtered = allData.filter(d =>
-    (d[2] || "").toString().toLowerCase().includes(v)
+    Array.isArray(d) && (d[2] || "").toString().toLowerCase().includes(v)
   );
 
   renderTable(filtered);
 });
 
-// default load
+// load pertama
 loadData("TRASSER", document.querySelector("nav button.active"));
 </script>
 
