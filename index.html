@@ -14,6 +14,7 @@ body {
   margin: 0;
 }
 
+/* HEADER */
 header {
   display: flex;
   justify-content: space-between;
@@ -25,6 +26,7 @@ header {
 
 .logo { height: 40px; }
 
+/* NAV */
 nav {
   display: flex;
   justify-content: center;
@@ -45,6 +47,7 @@ nav button.active {
   color: #fff;
 }
 
+/* CONTAINER */
 .container {
   max-width: 1200px;
   margin: auto;
@@ -59,6 +62,7 @@ input {
   border: 1px solid #ccc;
 }
 
+/* TABLE */
 table {
   width: 100%;
   border-collapse: collapse;
@@ -118,11 +122,25 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzfkFMws7efeTXbGSbIJEa7
 
 let allData = [];
 
+// 🔢 FORMAT RUPIAH
+function formatRupiah(angka) {
+  if (!angka || angka == "-") return "-";
+  return "Rp" + Number(angka).toLocaleString("id-ID");
+}
+
+// 📊 FORMAT PERSEN
+function formatPersen(angka) {
+  if (!angka || angka == "-") return "-";
+  return (Number(angka) * 100).toFixed(2) + "%";
+}
+
+// 🔢 PARSE NUMBER
 function parseNumber(str) {
   if (!str) return 0;
   return Number(str.toString().replace(/[Rp,%\s.]/g, ""));
 }
 
+// LOAD DATA
 function loadData(sheet, btn) {
   document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
   btn.classList.add("active");
@@ -133,16 +151,15 @@ function loadData(sheet, btn) {
   fetch(`${API_URL}?sheet=${sheet}`)
     .then(res => res.json())
     .then(data => {
-      console.log("DATA:", data);
       allData = data;
       renderTable(data);
     })
-    .catch(err => {
-      console.error(err);
+    .catch(() => {
       tbody.innerHTML = "<tr><td colspan='8'>Gagal mengambil data</td></tr>";
     });
 }
 
+// RENDER TABLE
 function renderTable(data) {
   const tbody = document.getElementById("data");
   let html = "";
@@ -156,16 +173,22 @@ function renderTable(data) {
     else if (rank === 2) rowClass = "highlight-rank2";
     else if (rank === 3) rowClass = "highlight-rank3";
 
+    // 🎨 WARNA MOM
+    let momVal = Number(d["MoM"]);
+    let momColor = "";
+    if (momVal > 0) momColor = "color:green;font-weight:600;";
+    else if (momVal < 0) momColor = "color:red;font-weight:600;";
+
     html += `
       <tr class="${rowClass}">
         <td>${d["Rank"] || "-"}</td>
         <td>${d["Outlet ID"] || ""}</td>
         <td>${d["Nama Outlet"] || ""}</td>
         <td>${d["Eligible"] || ""}</td>
-        <td>${d["Score"] || ""}</td>
-        <td>${d["Rev SS Bulan Lalu"] || ""}</td>
-        <td>${d["Rev SS Bulan Ini"] || ""}</td>
-        <td>${d["MoM"] || ""}</td>
+        <td>${(d["Score"])}</td>
+        <td>${formatRupiah(d["Rev SS Bulan Lalu"])}</td>
+        <td>${formatRupiah(d["Rev SS Bulan Ini"])}</td>
+        <td style="${momColor}">${formatPersen(d["MoM"])}</td>
       </tr>
     `;
   });
@@ -173,7 +196,7 @@ function renderTable(data) {
   tbody.innerHTML = html || "<tr><td colspan='8'>Tidak ada data</td></tr>";
 }
 
-// search
+// SEARCH
 document.getElementById("search").addEventListener("input", e => {
   const v = e.target.value.toLowerCase();
 
@@ -184,7 +207,7 @@ document.getElementById("search").addEventListener("input", e => {
   renderTable(filtered);
 });
 
-// load awal
+// LOAD AWAL
 loadData("TRASSER", document.querySelector("nav button.active"));
 </script>
 
