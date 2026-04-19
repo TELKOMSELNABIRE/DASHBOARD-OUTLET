@@ -14,7 +14,6 @@ body {
   margin: 0;
 }
 
-/* HEADER */
 header {
   display: flex;
   justify-content: space-between;
@@ -26,7 +25,6 @@ header {
 
 .logo { height: 40px; }
 
-/* NAV */
 nav {
   display: flex;
   justify-content: center;
@@ -47,7 +45,6 @@ nav button.active {
   color: #fff;
 }
 
-/* CONTAINER */
 .container {
   max-width: 1200px;
   margin: auto;
@@ -62,7 +59,6 @@ input {
   border: 1px solid #ccc;
 }
 
-/* TABLE */
 table {
   width: 100%;
   border-collapse: collapse;
@@ -74,9 +70,10 @@ th, td {
   border-bottom: 1px solid #eee;
 }
 
-th { background: #f0f0f0; }
+th {
+  background: #f0f0f0;
+}
 
-/* HIGHLIGHT */
 .highlight-rank1 td { background: #e8f5e9; }
 .highlight-rank2 td { background: #f1f8e9; }
 .highlight-rank3 td { background: #fffde7; }
@@ -121,13 +118,11 @@ const API_URL = "https://script.google.com/macros/s/AKfycbyUkRm2WLla2Vb65Lv892KA
 
 let allData = [];
 
-// parsing angka
 function parseNumber(str) {
   if (!str) return 0;
   return Number(str.toString().replace(/[Rp,%\s.]/g, ""));
 }
 
-// ambil data
 function loadData(sheet, btn) {
   document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
   btn.classList.add("active");
@@ -138,73 +133,39 @@ function loadData(sheet, btn) {
   fetch(`${API_URL}?sheet=${sheet}`)
     .then(res => res.json())
     .then(data => {
-      console.log("DATA MASUK:", data);
-
-      if (!data || data.length === 0) {
-        tbody.innerHTML = "<tr><td colspan='8'>Data kosong</td></tr>";
-        return;
-      }
-
+      console.log("DATA:", data);
       allData = data;
       renderTable(data);
     })
     .catch(err => {
-      console.error("ERROR:", err);
+      console.error(err);
       tbody.innerHTML = "<tr><td colspan='8'>Gagal mengambil data</td></tr>";
     });
 }
 
-// render tabel (support ARRAY & OBJECT)
 function renderTable(data) {
   const tbody = document.getElementById("data");
   let html = "";
 
   data.forEach(d => {
 
-    let row;
-
-    // 🔥 SUPPORT 2 FORMAT
-    if (Array.isArray(d)) {
-      row = {
-        outlet: d[0],
-        nama: d[2],
-        rev1: d[4],
-        rev2: d[5],
-        mom: d[6],
-        eligible: d[7],
-        score: d[8],
-        rank: d[9]
-      };
-    } else {
-      row = {
-        outlet: d["Outlet ID"],
-        nama: d["Nama Outlet"],
-        rev1: d["Rev SS Bulan Lalu"],
-        rev2: d["Rev SS Bulan Ini"],
-        mom: d["MoM"],
-        eligible: d["Eligible"],
-        score: d["Score"],
-        rank: d["Rank"]
-      };
-    }
-
-    const rankNum = parseNumber(row.rank);
+    const rank = parseNumber(d["Rank"]);
 
     let rowClass = "";
-    if (rankNum === 1) rowClass = "highlight-rank1";
-    else if (rankNum === 2) rowClass = "highlight-rank2";
-    else if (rankNum === 3) rowClass = "highlight-rank3";
+    if (rank === 1) rowClass = "highlight-rank1";
+    else if (rank === 2) rowClass = "highlight-rank2";
+    else if (rank === 3) rowClass = "highlight-rank3";
 
     html += `
       <tr class="${rowClass}">
-        <td>${row.rank || ""}</td>
-        <td>${row.outlet || ""}</td>
-        <td>${row.nama || ""}</td>
-        <td>${row.eligible || ""}</td>
-        <td>${row.score || ""}</td>
-        <td>${row.rev1 || ""}</td>
-        <td>${row.rev2 || ""}</td>
-        <td>${row.mom || ""}</td>
+        <td>${d["Rank"] || "-"}</td>
+        <td>${d["Outlet ID"] || ""}</td>
+        <td>${d["Nama Outlet"] || ""}</td>
+        <td>${d["Eligible"] || ""}</td>
+        <td>${d["Score"] || ""}</td>
+        <td>${d["Rev SS Bulan Lalu"] || ""}</td>
+        <td>${d["Rev SS Bulan Ini"] || ""}</td>
+        <td>${d["MoM"] || ""}</td>
       </tr>
     `;
   });
@@ -216,10 +177,9 @@ function renderTable(data) {
 document.getElementById("search").addEventListener("input", e => {
   const v = e.target.value.toLowerCase();
 
-  const filtered = allData.filter(d => {
-    let nama = Array.isArray(d) ? d[2] : d["Nama Outlet"];
-    return (nama || "").toString().toLowerCase().includes(v);
-  });
+  const filtered = allData.filter(d =>
+    (d["Nama Outlet"] || "").toLowerCase().includes(v)
+  );
 
   renderTable(filtered);
 });
