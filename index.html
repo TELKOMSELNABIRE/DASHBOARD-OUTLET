@@ -201,7 +201,7 @@ data.forEach(d => {
 document.getElementById("search").addEventListener("input", e => {
   const v = e.target.value.toLowerCase();
   renderTable(allData.filter(d =>
-    (d["Nama Outlet"] || "").toLowerCase().includes(v)
+    (d["2"] || "").toLowerCase().includes(v)
   ));
 });
 
